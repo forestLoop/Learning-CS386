@@ -8,7 +8,7 @@ from torch.utils.data import Dataset, DataLoader
 
 class ImageDataset(Dataset):
 
-    def __init__(self, dataset_root, scenes):
+    def __init__(self, dataset_root, scenes, crop_size=(500, 500)):
         self.images = dict()
         self.data = []
         print("Loading dataset...")
@@ -28,8 +28,13 @@ class ImageDataset(Dataset):
             for image_name in rankings.keys():
                 image_path = os.path.join(image_folder, image_name)
                 image = cv2.imread(image_path)
+                # crop the center region
+                h, w = image.shape[:2]
+                h = (h - crop_size[0]) // 2
+                w = (w - crop_size[1]) // 2
+                image = image[h:h + crop_size[0], w:w + crop_size[1], :]
+                assert image.shape[:2] == crop_size
                 # (height, weight, channel) -> (channel, weight, height)
-                image = cv2.resize(image, (3024, 4032))
                 image = np.transpose(image, (2, 0, 1))
                 self.images[image_name] = image
                 r1 = np.array(rankings[image_name])
