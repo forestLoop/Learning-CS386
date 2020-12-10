@@ -25,6 +25,7 @@ def validate(dataloader, model):
             print(loss.item(), end=",")
             total_loss += loss.item()
         tok = time.time()
+        print()
         print(
             f"Validation finished in {tok-tik:.3f}s, total loss is {total_loss:.5f}.")
     return total_loss
