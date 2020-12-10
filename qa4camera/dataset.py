@@ -2,7 +2,7 @@ import os
 import csv
 import cv2
 import numpy as np
-
+import torch
 from torch.utils.data import Dataset, DataLoader
 
 
@@ -29,8 +29,8 @@ class ImageDataset(Dataset):
                 image_path = os.path.join(image_folder, image_name)
                 image = cv2.imread(image_path)
                 # (height, weight, channel) -> (channel, weight, height)
-                image = np.transpose(image, (2, 0, 1))
                 image = cv2.resize(image, (3024, 4032))
+                image = np.transpose(image, (2, 0, 1))
                 self.images[image_name] = image
                 r1 = np.array(rankings[image_name])
                 for another_image_name in rankings.keys():
@@ -52,8 +52,8 @@ class ImageDataset(Dataset):
         item = self.data[idx]
         image1 = self.images[item[0]]
         image2 = self.images[item[1]]
-        image = np.dstack((image1, image2))
-        assert image.shape[2] == 6
+        image = np.concatenate((image1, image2))
+        assert image.shape[0] == 6
         labels = item[2]
         return image, labels
 
