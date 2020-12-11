@@ -7,19 +7,21 @@ from torch.utils.data import Dataset, DataLoader
 
 
 class ImageDataset(Dataset):
-
     def __init__(self, dataset_root, scenes, crop_size=(500, 500)):
         self.images = dict()
         self.data = []
         print("Loading dataset...")
         sort_result_dir = os.path.join(
-            dataset_root, "score_and_sort", "Training", "sort")
+            dataset_root, "score_and_sort", "Training", "sort"
+        )
         scenes_dir = os.path.join(dataset_root, "Training")
         for scene_id in scenes:
             print(f"Scene {scene_id:03d}")
             # rankings[image_name] = (Color, Exposure, Noise, Texture)
             rankings = dict()
-            with open(os.path.join(sort_result_dir, "{:03d}.csv".format(scene_id))) as f:
+            with open(
+                os.path.join(sort_result_dir, "{:03d}.csv".format(scene_id))
+            ) as f:
                 reader = csv.reader(f)
                 next(reader)  # skip header row
                 for row in reader:
@@ -32,7 +34,7 @@ class ImageDataset(Dataset):
                 h, w = image.shape[:2]
                 h = (h - crop_size[0]) // 2
                 w = (w - crop_size[1]) // 2
-                image = image[h:h + crop_size[0], w:w + crop_size[1], :]
+                image = image[h : h + crop_size[0], w : w + crop_size[1], :].copy()
                 assert image.shape[:2] == crop_size
                 # (height, weight, channel) -> (channel, weight, height)
                 image = np.transpose(image, (2, 0, 1))
@@ -42,11 +44,10 @@ class ImageDataset(Dataset):
                     if image_name == another_image_name:
                         continue
                     r2 = np.array(rankings[another_image_name])
-                    self.data.append(
-                        (image_name, another_image_name, (r1 < r2) * 1)
-                    )
+                    self.data.append((image_name, another_image_name, (r1 < r2) * 1))
         print(
-            f"Dataset loadeded: {len(self.images)} images and {len(self.data)} pairs.")
+            f"Dataset loadeded: {len(self.images)} images and {len(self.data)} pairs."
+        )
 
     def __len__(self):
         return len(self.data)
