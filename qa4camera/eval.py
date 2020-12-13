@@ -79,7 +79,7 @@ def eval_scene(model, scene_folder, crop_size=(500, 500), sort_result=None):
 
 if __name__ == "__main__":
     is_cuda = True
-    model = torch.load("./model/resnet50-test-1e-5.pth").cuda()
+    model = torch.load("./model/resnet50extended-full-1e-5.pth").cuda()
     scenes = range(81, 101)
     all_srcc = []
     for s in scenes:
@@ -90,7 +90,8 @@ if __name__ == "__main__":
             (500, 500),
             f"/root/dataset/score_and_sort/Training/sort/{s:03d}.csv",
         )
-        # print(result)
+        for k in sorted(result.keys()):
+            print(k, result[k])
         print(f"SRCC: {srcc}")
         all_srcc.append(srcc)
     print(f"Overall SRCC: {np.mean(all_srcc, axis=0)}")
