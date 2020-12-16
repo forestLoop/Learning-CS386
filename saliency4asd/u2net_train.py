@@ -113,8 +113,6 @@ val_label_dir = tra_label_dir
 image_ext = ".png"
 label_ext = ".png"
 
-training_task_name = "pretrained"
-model_history_dir = "./saved_models/history/"
 best_model = "./saved_models/u2net-trained.pth"
 pretrained_model_path = "./saved_models/u2net.pth"
 
@@ -150,24 +148,22 @@ optimizer = optim.Adam(
 # ------- 5. training process --------
 print("---start training...")
 ite_num = 0
-running_loss = 0.0
-running_tar_loss = 0.0
-ite_num4val = 0
-save_frq = 1000  # save the model every 1000 iterations
 
 min_loss = float("inf")
 
 for epoch in range(0, epoch_num):
-    net.train()
     val_loss, _ = validate(net, val_dataloader)
     if val_loss < min_loss:
         print("--- Save best model ---")
         print(f"min loss: {min_loss:.3f} -> {val_loss:.3f}")
         min_loss = val_loss
         torch.save(net.state_dict(), best_model)
+    net.train()
+    running_loss = 0.0
+    running_tar_loss = 0.0
+    batch_num = 0
     for i, data in enumerate(train_dataloader):
-        ite_num = ite_num + 1
-        ite_num4val = ite_num4val + 1
+        ite_num, batch_num = ite_num + 1, batch_num + 1
 
         inputs, labels = data["image"], data["label"]
 
@@ -198,32 +194,15 @@ for epoch in range(0, epoch_num):
         running_loss += loss.item()
         running_tar_loss += loss2.item()
 
-        # del temporary outputs and loss
-        del d0, d1, d2, d3, d4, d5, d6, loss2, loss
-
         print(
-            "[epoch: %3d/%3d, batch: %5d/%5d, ite: %d] train loss: %3f, tar: %3f "
-            % (
-                epoch + 1,
-                epoch_num,
-                (i + 1) * batch_size_train,
-                train_num,
-                ite_num,
-                running_loss / ite_num4val,
-                running_tar_loss / ite_num4val,
-            )
+            f"[epoch: {epoch + 1:3d}/{epoch_num:3d}, batch: {(i + 1) * batch_size_train:3d}/{train_num:3d}, ite: {ite_num}] train loss: {loss.item():.3f}, tar: {loss2.item()}",
+            flush=True,
         )
 
-        if ite_num % save_frq == 0:
-            print("--- Save model checkpoint ---")
-            torch.save(
-                net.state_dict(),
-                model_history_dir
-                + training_task_name
-                + "_bce_itr_%d_train_%3f_tar_%3f.pth"
-                % (ite_num, running_loss / ite_num4val, running_tar_loss / ite_num4val),
-            )
-            running_loss = 0.0
-            running_tar_loss = 0.0
-            net.train()  # resume train
-            ite_num4val = 0
+        # del temporary outputs and loss
+        del d0, d1, d2, d3, d4, d5, d6, loss2, loss
+    print("--- Epoch Summary ---")
+    print(
+        f"Average loss: {running_loss / batch_num:.3f}, average tar: {running_tar_loss / batch_num:.3f}",
+        flush=True,
+    )
