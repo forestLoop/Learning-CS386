@@ -1,26 +1,20 @@
 import os
-from skimage import io, transform
 import torch
-import torchvision
+
+from skimage import io
 from torch.autograd import Variable
-import torch.nn as nn
-import torch.nn.functional as F
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 from torchvision import transforms  # , utils
 
-# import torch.optim as optim
-
-import numpy as np
 from PIL import Image
 import glob
 
 from data_loader import RescaleT
-from data_loader import ToTensor
 from data_loader import ToTensorLab
 from data_loader import SalObjDataset
 
 from model import U2NET  # full size version 173.6 MB
-from model import U2NETP  # small version u2net 4.7 MB
+
 
 # normalize the predicted SOD probability map
 def normPRED(d):
@@ -37,15 +31,12 @@ def save_output(image_name, pred, d_dir):
     predict = pred
     predict = predict.squeeze()
     predict_np = predict.cpu().data.numpy()
-    print(np.max(predict_np), np.min(predict_np))
 
     im = Image.fromarray(predict_np * 255).convert("RGB")
     # print(list(im.getdata()))
     img_name = image_name.split(os.sep)[-1]
     image = io.imread(image_name)
     imo = im.resize((image.shape[1], image.shape[0]), resample=Image.BILINEAR)
-
-    pb_np = np.array(imo)
 
     aaa = img_name.split(".")
     bbb = aaa[0:-1]
@@ -59,18 +50,9 @@ def save_output(image_name, pred, d_dir):
 def main():
 
     # --------- 1. get image path and name ---------
-    model_name = "u2net"  # u2netp
-
-    image_dir = os.path.join(os.getcwd(), "test_data", "test_images")
-    prediction_dir = os.path.join(
-        os.getcwd(), "test_data", model_name + "_results" + os.sep
-    )
-    model_dir = os.path.join(
-        os.getcwd(), "saved_models", model_name, model_name + ".pth"
-    )
-    model_dir = (
-        "./saved_models/cs386/u2net/u2net_bce_itr_4000_train_1.529855_tar_0.214625.pth"
-    )
+    image_dir = "/root/TrainingDataset/TrainingData/ImagesTest"
+    prediction_dir = "./test_data/ImagesTest_Result/"
+    model_dir = "./saved_models/u2net-trained.pth"
 
     img_name_list = glob.glob(image_dir + os.sep + "*")
     print(img_name_list)
@@ -87,12 +69,7 @@ def main():
     )
 
     # --------- 3. model define ---------
-    if model_name == "u2net":
-        print("...load U2NET---173.6 MB")
-        net = U2NET(3, 1)
-    elif model_name == "u2netp":
-        print("...load U2NEP---4.7 MB")
-        net = U2NETP(3, 1)
+    net = U2NET(3, 1)
     net.load_state_dict(torch.load(model_dir))
     if torch.cuda.is_available():
         net.cuda()
@@ -111,7 +88,8 @@ def main():
         else:
             inputs_test = Variable(inputs_test)
 
-        d1, d2, d3, d4, d5, d6, d7 = net(inputs_test)
+        with torch.no_grad():
+            d1, d2, d3, d4, d5, d6, d7 = net(inputs_test)
 
         # normalization
         pred = d1[:, 0, :, :]
