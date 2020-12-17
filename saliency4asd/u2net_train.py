@@ -106,7 +106,7 @@ def muti_bce_loss_fusion(d0, d1, d2, d3, d4, d5, d6, labels_v):
 
 data_dir = "/root/TrainingDataset/TrainingData"
 tra_image_dir = os.path.join(data_dir, "ImagesTrain")
-tra_label_dir = os.path.join(data_dir, "TD_FixMaps")
+tra_label_dir = os.path.join(data_dir, "ASD_FixMaps")
 val_image_dir = os.path.join(data_dir, "ImagesVal")
 val_label_dir = tra_label_dir
 
