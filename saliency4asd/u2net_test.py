@@ -32,7 +32,7 @@ def save_output(image_name, pred, d_dir):
     predict = predict.squeeze()
     predict_np = predict.cpu().data.numpy()
 
-    im = Image.fromarray(predict_np * 255).convert("RGB")
+    im = Image.fromarray(predict_np * 255).convert("L")
     # print(list(im.getdata()))
     img_name = image_name.split(os.sep)[-1]
     image = io.imread(image_name)
